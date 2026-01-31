@@ -260,3 +260,5 @@ plt.imshow(combined_image, cmap='gray')
 plt.title('Combined Image')
 plt.colorbar()
 plt.show()
+
+
