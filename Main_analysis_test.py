@@ -188,9 +188,10 @@ test_shutter_speed_str = "1/200"
 test_shutter_speed_float = shutter_speed_to_float(test_shutter_speed_str)
 print(f"Shutter speed string: {test_shutter_speed_str}, Converted to float: {test_shutter_speed_float} seconds")
 
-# Define a function to combine all the images in the image_info list of tuples into a single image by 
-# combingining their green channels with appropriate normalization based on shutter speed
-def combine_images(file_path, json_name, Result_file_name="combined_image.tif"):
+# Define a function to combine all the dark field for specific setup. since the darkfield was determined to be none lineared with
+# the shutter speed and comprised mostly of some noise or bias that is indepedent of the shutter speed, we will simply average the dark field images without normalizing by shutter speed
+
+def average_non_linear_darkfield(file_path, json_name, Result_file_name="average_non_linear_darkfield_image.tif"):
     image_info = extract_image_Information(json_name, file_path)
     combined_image = None
     #counter to keep track of number of images combined compared to total number of images
@@ -198,6 +199,41 @@ def combine_images(file_path, json_name, Result_file_name="combined_image.tif"):
     count = 0
     for tif_name, cr2_path, tif_path, shutter_speed in image_info:
         green_channel = extract_green_channel(tif_path)
+        # Since dark field is non linear with shutter speed, we do not normalize by shutter speed
+        normalized_channel = green_channel
+        # average the dark field images
+        if combined_image is None:  
+            combined_image = normalized_channel
+            #counter to keep track of number of images combined compared to total number of images
+            count = 1
+            print(f"Combining image {count} of {total_count_images}: {tif_name}", flush=True)
+        else:
+            combined_image += normalized_channel
+            count += 1
+            print(f"Combining image {count} of {total_count_images}: {tif_name}", flush=True)    
+        average_non_linear_darkfield = combined_image / total_count_images
+    # save the averaged image as a tif file to a new folder called "combined_results" in the file_path
+    average_non_linear_darkfield_results_path = file_path / "combined_results"
+    average_non_linear_darkfield_results_path.mkdir(exist_ok=True)  # create the folder if it doesn't exist
+    tifffile.imwrite(average_non_linear_darkfield_results_path / Result_file_name, average_non_linear_darkfield.astype(np.float64))   
+    return average_non_linear_darkfield.astype(np.float64)
+
+# Define a function to combine all the images in the image_info list of tuples into a single image by 
+# combingining their green channels (after minusing the darkfield) with appropriate normalization based on shutter speed and save the result as a tif file.
+# also normalized by total number of images combined to match with other images with different number of shot and shutter speeds
+def combine_images(file_path, json_name, Result_file_name="averaged_image.tif",average_darkfield=None):
+    image_info = extract_image_Information(json_name, file_path)
+    combined_image = None
+    #counter to keep track of number of images combined compared to total number of images
+    total_count_images = len(image_info)    
+    count = 0
+    for tif_name, cr2_path, tif_path, shutter_speed in image_info:
+        green_channel = extract_green_channel(tif_path)
+        # subtract darkfield before normalizing by shutter speed
+        if average_darkfield is not None:
+            green_channel -= average_darkfield
+            # ensure no negative values after darkfield subtraction
+            green_channel = np.clip(green_channel, a_min=0, a_max=None) 
         # Normalize the green channel by shutter speed
         shutter_speed_float = shutter_speed_to_float(shutter_speed)
         normalized_channel = green_channel / shutter_speed_float
@@ -205,20 +241,20 @@ def combine_images(file_path, json_name, Result_file_name="combined_image.tif"):
             combined_image = normalized_channel
             #counter to keep track of number of images combined compared to total number of images
             count = 1
-            print(f"Combining image {count} of {total_count_images}: {tif_name} with shutter speed {shutter_speed} ({shutter_speed_float} seconds)")
+            print(f"Combining image {count} of {total_count_images}: {tif_name} with shutter speed {shutter_speed} ({shutter_speed_float} seconds)", flush=True)
         else:
             combined_image += normalized_channel
             count += 1
-            print(f"Combining image {count} of {total_count_images}: {tif_name} with shutter speed {shutter_speed} ({shutter_speed_float} seconds)")    
+            print(f"Combining image {count} of {total_count_images}: {tif_name} with shutter speed {shutter_speed} ({shutter_speed_float} seconds)", flush=True)    
+    average_image = combined_image / total_count_images
     # save the combined image as a tif file to a new folder called "combined_results" in the file_path
-    combined_results_path = file_path / "combined_results"
-    combined_results_path.mkdir(exist_ok=True)  # create the folder if it doesn't exist
-    tifffile.imwrite(combined_results_path / Result_file_name, combined_image.astype(np.float64))   
-    return combined_image.astype(np.float64)
-
+    average_results_path = file_path / "average_results"
+    average_results_path.mkdir(exist_ok=True)  # create the folder if it doesn't exist
+    tifffile.imwrite(average_results_path / Result_file_name, average_image.astype(np.float64))   
+    return average_image.astype(np.float64)
 
 # test the combine_images function
-combined_image = combine_images(file_path, json_name, Result_file_name="center_combined_imaget.tif") 
+combined_image = combine_images(file_path, json_name, Result_file_name="center_averaged_image_test.tif") 
 # display the combined image
 plt.imshow(combined_image, cmap='gray') 
 plt.title('Combined Image')
