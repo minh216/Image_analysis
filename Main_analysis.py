@@ -47,8 +47,6 @@ def extract_image_Information(json_name, file_path):
         ]
         
         return Image_info
-  
-
     
 # Define a function to convert CR2 raw to tif using rawpy full bit depth without without any alteration to the raw data, and save the tif file in the same folder as the CR2 file with the same name but with .tif extension
 def convert_cr2_to_tif(cr2_path, tif_folder_name="tif_images"):
@@ -56,7 +54,7 @@ def convert_cr2_to_tif(cr2_path, tif_folder_name="tif_images"):
     tif_folder_path.mkdir(parents=True, exist_ok=True)
     tif_path = tif_folder_path / (cr2_path.stem + ".tif")
     with rawpy.imread(str(cr2_path)) as raw:
-        rgb_tif =raw.postprocess(no_auto_bright=True, output_bps=16, use_camera_wb=False, use_auto_wb=False, 
+        rgb_tif = raw.postprocess(no_auto_bright=True, output_bps=16, use_camera_wb=False, use_auto_wb=False, 
                              user_wb=[1, 1, 1, 1], output_color=rawpy.ColorSpace.raw, gamma=(1, 1),
                              demosaic_algorithm=rawpy.DemosaicAlgorithm.LINEAR, median_filter_passes = 0,
                              half_size=False, four_color_rgb=False)  # keep the full bit depth without any alteration to the raw data
@@ -204,7 +202,7 @@ for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1_15_image_info:
     print("--------------------------------------------------")
 
 # Average the dark field images for 1/15 seconds setup and save to the same folder with the name "average_non_linear_darkfield_1_15.tif"
-average_non_linear_darkfield_1_15 = combined_darkfield / len(darkfield_1_15_image_info)
+average_non_linear_darkfield_1_15 = np.float32(combined_darkfield / len(darkfield_1_15_image_info))
 
 # Analyze the statistic for the average dark field image for 1/15 seconds setup
 print("Average Non-linear Dark Field 1/15 seconds statistics:")
@@ -246,7 +244,7 @@ for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1__3_image_info:
     print("--------------------------------------------------")
 
 # Average the dark field images for 1.3 seconds setup and save to the same folder with the name "average_non_linear_darkfield_1__3.tif"
-average_non_linear_darkfield_1__3 = combined_darkfield / len(darkfield_1__3_image_info)
+average_non_linear_darkfield_1__3 = np.float32(combined_darkfield / len(darkfield_1__3_image_info))
 
 # Analyze the statistic for the average dark field image for 1.3 seconds setup
 print("Average Non-linear Dark Field 1.3 seconds statistics:")
