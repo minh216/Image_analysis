@@ -10,10 +10,10 @@ import scipy
 from scipy.optimize import curve_fit
 
 # uni laptop path
-# file_path = pathlib.Path(r"C:\Users\HDao\Dropbox\2026\Single Slit Diffraction\Single_slit_diffraction_serious_26_01_26") # folder containting the JSON file
+file_path = pathlib.Path(r"C:\Users\HDao\Dropbox\2026\Single Slit Diffraction\Single_slit_diffraction_serious_26_01_26") # folder containting the JSON file
 
 # home pc path
-file_path = pathlib.Path(r"C:\Users\mnhda\Dropbox\2026\Single Slit Diffraction\Single_slit_diffraction_serious_26_01_26") # folder containting the JSON file
+# file_path = pathlib.Path(r"C:\Users\mnhda\Dropbox\2026\Single Slit Diffraction\Single_slit_diffraction_serious_26_01_26") # folder containting the JSON file
 
 json_name = "center_1_15_20260126_215858_metadata.json" # name of the JSON file
 full_path = file_path / json_name # full path to the JSON file the / operator joins paths can only be used with Path from pathlib
@@ -49,6 +49,15 @@ full_path = file_path / json_name # full path to the JSON file the / operator jo
 # # shutter_speeds = extract_shutter_speeds(json_name, file_path)
 # # print(f"Extracted shutter speeds:{shutter_speeds}") 
 
+# Define a function to extract motor postion from json files for center, left and right images. motor position is in "motor_group", each motor 
+# is "Group3", "Group4", etc. Group3 is Camera X axis, Group4 is Camera Y axis
+def extract_motor_position(json_name, file_path):
+    full_path = file_path / json_name
+    with open(full_path, 'r') as json_file:
+        metadata = json.load(json_file)
+        Cam_X_position = metadata.get('motor_group', {}).get('Group3', 0)  # X axis motor position
+        Cam_Y_position = metadata.get('motor_group', {}).get('Group4', 0)  # Y axis motor position
+        return Cam_X_position, Cam_Y_position
 
 
 def extract_image_Information(json_name, file_path):
