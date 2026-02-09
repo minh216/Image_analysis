@@ -40,7 +40,7 @@ def extract_image_Information(json_name, file_path):
             (
                 capture.get('image_name', ''),  # image name
                 file_path / capture.get('image_name', ''),  # file path of cr2
-                file_path / "tif_images" / (capture.get('image_name', '').replace('.CR2', '.tif')),  # file path of tif
+                file_path / (capture.get('image_name', '').replace('.CR2', '.tif')),  # file path of tif
                 capture.get('camera_settings', {}).get('shutter_speed', '')  # shutter speed nested in camera_settings
             )
             for capture in captures 
@@ -265,6 +265,10 @@ plt.colorbar()
 
 # Analyze individual dark field images for 1/15 seconds setup
 darkfield_1_15_image_info = extract_image_Information(darkfield_1_15_json_name, file_path)
+# print tif path
+print("Dark Field 1/15 seconds individual image paths:")
+for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1_15_image_info:
+    print(f"Image: {tif_name}, TIF Path: {tif_path}, Shutter Speed: {shutter_speed}")   
 print("Dark Field 1/15 seconds individual image statistics:")  
 for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1_15_image_info:
     green_channel = extract_green_channel(tif_path)
