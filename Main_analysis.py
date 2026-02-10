@@ -11,7 +11,6 @@ from scipy.optimize import curve_fit
 
 # uni laptop path
 file_path = pathlib.Path(r"C:\Users\HDao\Dropbox\2026\Single Slit Diffraction\Single_slit_diffraction_serious_26_01_26") # folder containting the JSON file
-
 # home pc path
 # file_path = pathlib.Path(r"C:\Users\mnhda\Dropbox\2026\Single Slit Diffraction\Single_slit_diffraction_serious_26_01_26") # folder containting the JSON file
 
@@ -27,6 +26,16 @@ Camera_pixel_X = 3456  # camera pixel in X direction
 Camera_pixel_Y = 5184  # camera pixel in Y direction
 
 ################### Functions ###################
+
+# Define a function to normalize an array to between 0 and 1
+def normalize_array(arr):
+    """Normalize an array to between 0 and 1."""
+    arrmin = np.min(arr)
+    arrmax = np.max(arr)
+    if arrmax - arrmin == 0:
+        return np.zeros_like(arr)  # avoid division by zero, return an array of zeros
+    else:
+        return (arr -arrmin) / (arrmax - arrmin)
 
 # Define a function to extract image information from JSON file
 def extract_image_Information(json_name, file_path):
@@ -162,17 +171,41 @@ def extract_motor_position(json_name, file_path):
 
 ################# Analysis Code ###################
 
-#%%
-# test the function by printing the image information for the dark field 1/15 seconds setup
-darkfield_1_15_image_info = extract_image_Information(darkfield_1_15_json_name, file_path)
-# print the information from darkfield tupple   
-for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1_15_image_info:
-    print(f"Image Name: {tif_name}")
-    print(f"CR2 Path: {cr2_path}")
-    print(f"TIF Path: {tif_path}")
-    print(f"Shutter Speed: {shutter_speed}")
-    print("--------------------------------------------------")
+# #%%
+# # test the function by printing the image information for the dark field 1/15 seconds setup
+# darkfield_1_15_image_info = extract_image_Information(darkfield_1_15_json_name, file_path)
+# # print the information from darkfield tupple   
+# for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1_15_image_info:
+#     print(f"Image Name: {tif_name}")
+#     print(f"CR2 Path: {cr2_path}")
+#     print(f"TIF Path: {tif_path}")
+#     print(f"Shutter Speed: {shutter_speed}")
+#     print("--------------------------------------------------")
 
+############### Step 0.5: determine the extra pixel in the raw and crop to actual image size of 5184 x 3456 ###############
+#%%
+# load the test raw CR2 file and the preview JPG file to determine the location of the extra pixels
+test_cr2_path =  pathlib.Path("C:/Users/HDao/Dropbox/2026/Single Slit Diffraction/test pixel of raw conversion/capt0000.cr2")
+test_jpg_path = pathlib.Path("C:/Users/HDao/Dropbox/2026/Single Slit Diffraction/test pixel of raw conversion/capt0000.jpg")
+test_pixel_tif_path, test_pixel_tif_array = convert_cr2_to_tif(test_cr2_path, tif_folder_name="test_pixel_tif_images") # convert the test CR2 file to tif and save in a new folder called "test_pixel_tif_images" in the same directory as the test CR2 file
+test_pixel_jpg = cv2.imread(str(test_jpg_path))  # read the test JPG file
+test_pixel_jpg = cv2.cvtColor(test_pixel_jpg, cv2.COLOR_BGR2RGB)  # convert from BGR to RGB color space
+#plot the horizontal profile of test_pixel_jpg for each of the RGB channels to make sure the RGB match with tif image
+plt.plot(test_pixel_jpg[test_pixel_jpg.shape[0] // 2, :, 0], label='JPG Red Channel', marker='o', color='red', alpha=0.2)   
+plt.plot(test_pixel_jpg[test_pixel_jpg.shape[0] // 2, :, 1], label='JPG Green Channel', marker='o', color='green', alpha=0.2)
+plt.plot(test_pixel_jpg[test_pixel_jpg.shape[0] // 2, :, 2], label='JPG Blue Channel', marker='o', color='blue', alpha=0.2)
+plt.title('Horizontal Profile of RGB Channels for Test Pixel JPG')   
+
+#%%
+# extract the green channel from the test pixel tif and test pixel jpg
+test_pixel_tif_green = extract_green_channel_from_float_image(test_pixel_tif_array)
+test_pixel_jpg_green = extract_green_channel_from_float_image(test_pixel_jpg)   
+# overplot the horizontal profile of the green channel for both the test pixel tif and test pixel jpg to determine the location of the extra pixels on the left or right side of the image, triangle for tif and circle for jpg, 50% transparency
+plt.plot(normalize_array(test_pixel_tif_green[test_pixel_tif_green.shape[0] // 2, :]), label='TIF Green Channel', marker='^', alpha=0.5)
+plt.plot(normalize_array(test_pixel_jpg_green[test_pixel_jpg_green.shape[0] // 2, :]), label='JPG Green Channel', marker='o', alpha=0.5)
+plt.title('Horizontal Profile of Green Channel for Test Pixel TIF and JPG')
+plt.xlabel('Pixel Position')
+plt.ylabel('Intensity') 
 
 ############### Step 1: Extracting image from CR2 to tif################
 
@@ -212,8 +245,7 @@ print(f"Standard Deviation: {np.std(average_non_linear_darkfield_1_15)}")
 tifffile.imwrite(file_path / "darkfield_1_15_tif_images" / "average_non_linear_darkfield_1_15.tif", average_non_linear_darkfield_1_15.astype(np.float64))
 
 # Normalize the average dark field to between 0 and 1 and show the log scale image
-average_non_linear_darkfield_1_15_normalized = (average_non_linear_darkfield_1_15 - np.min(average_non_linear_darkfield_1_15)) / (np.max(average_non_linear_darkfield_1_15) - np.min(average_non_linear_darkfield_1_15))
-plt.imshow(np.log10(average_non_linear_darkfield_1_15_normalized + 1), cmap='gray')  # add 1 to avoid log(0)
+plt.imshow(np.log10(normalize_array(average_non_linear_darkfield_1_15) + 1), cmap='gray')  # add 1 to avoid log(0)
 plt.title('Average Non-linear Dark Field 1/15 seconds (Log Scale)')
 plt.colorbar()
 
@@ -254,97 +286,77 @@ print(f"Standard Deviation: {np.std(average_non_linear_darkfield_1__3)}")
 tifffile.imwrite(file_path / "darkfield_1__3_tif_images" / "average_non_linear_darkfield_1__3.tif", average_non_linear_darkfield_1__3.astype(np.float64))
 
 # Normalize the average dark field to between 0 and 1 and show the log scale image
-average_non_linear_darkfield_1__3_normalized = (average_non_linear_darkfield_1__3 - np.min(average_non_linear_darkfield_1__3)) / (np.max(average_non_linear_darkfield_1__3) - np.min(average_non_linear_darkfield_1__3))
-plt.imshow(np.log10(average_non_linear_darkfield_1__3_normalized + 1), cmap='gray')  # add 1 to avoid log(0)
+plt.imshow(np.log10(normalize_array(average_non_linear_darkfield_1__3) + 1), cmap='gray')  # add 1 to avoid log(0)
 plt.title('Average Non-linear Dark Field 1.3 seconds (Log Scale)')
 plt.colorbar()  
 
-############### Analysis of dark field images ###############
+# ############### Analysis of dark field images ###############
+
+# #%%
+
+# # Analyze individual dark field images for 1/15 seconds setup
+# darkfield_1_15_image_info = extract_image_Information(darkfield_1_15_json_name, file_path)
+# # print tif path
+# print("Dark Field 1/15 seconds individual image paths:")
+# for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1_15_image_info:
+#     print(f"Image: {tif_name}, TIF Path: {tif_path}, Shutter Speed: {shutter_speed}")   
+# print("Dark Field 1/15 seconds individual image statistics:")  
+# for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1_15_image_info:
+#     green_channel = extract_green_channel(tif_path)
+#     print(f"Image: {tif_name}, Shutter Speed: {shutter_speed}")
+#     print(f"Mean: {np.mean(green_channel)}")      
+#     print(f"Median: {np.median(green_channel)}")
+#     print(f"Standard Deviation: {np.std(green_channel)}")
+#     print("--------------------------------------------------")
+
+
+
+# # Combine dark field images for 1/15 seconds setup
+# combined_darkfield_1_15 = average_non_linear_darkfield(file_path, darkfield_1_15_json_name, Result_file_name="average_non_linear_darkfield_1_15.tif")  
+
+# # Check dark field image 1/15 statistics: means, median, std    
+# print("Dark Field 1/15 seconds statistics:")
+# print(f"Mean: {np.mean(combined_darkfield_1_15)}")      
+# print(f"Median: {np.median(combined_darkfield_1_15)}")
+# print(f"Standard Deviation: {np.std(combined_darkfield_1_15)}")
+
+
+
+
+####################### Step 2: Extract combine and average diffraction images ###############
+
 
 #%%
+#
+# # Combine all center peak of the diffraction images
+# combined_image = combine_images(file_path, center_json_name, Result_file_name="center_averaged_image.tif") 
 
-# Analyze individual dark field images for 1/15 seconds setup
-darkfield_1_15_image_info = extract_image_Information(darkfield_1_15_json_name, file_path)
-# print tif path
-print("Dark Field 1/15 seconds individual image paths:")
-for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1_15_image_info:
-    print(f"Image: {tif_name}, TIF Path: {tif_path}, Shutter Speed: {shutter_speed}")   
-print("Dark Field 1/15 seconds individual image statistics:")  
-for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1_15_image_info:
-    green_channel = extract_green_channel(tif_path)
-    print(f"Image: {tif_name}, Shutter Speed: {shutter_speed}")
-    print(f"Mean: {np.mean(green_channel)}")      
-    print(f"Median: {np.median(green_channel)}")
-    print(f"Standard Deviation: {np.std(green_channel)}")
-    print("--------------------------------------------------")
+# #%%
+# # Display the combined image in natural log scale
+# combined_image_log = np.log(combined_image + 100000)  # add 1 to avoid log(0)
+# plt.imshow(combined_image_log, cmap='gray')
+# plt.title('Averaged Image (Log Scale)')
+# plt.colorbar()
+# plt.show()
 
+# #%%
+# # Plot the central horizontal cross-section of the averaged image in log scale 
+# central_row = combined_image[combined_image.shape[0] // 2, :]
+# plt.plot(np.log(central_row + 100000))  # add 1 to avoid log(0)
+# plt.title('Central Horizontal Cross-Section of Averaged Image (Log Scale)')
+# plt.xlabel('Pixel Position')
+# plt.ylabel('Intensity (log scale)')
+# plt.show() 
 
+# #%%
+# # Combine all left peak of the diffraction images
+# left_json_name = "left_1__3_20260126_225055_metadata.json"
+# combined_left_image = combine_images(file_path, left_json_name, Result_file_name="left_averaged_image.tif")
 
-# Combine dark field images for 1/15 seconds setup
-combined_darkfield_1_15 = average_non_linear_darkfield(file_path, darkfield_1_15_json_name, Result_file_name="average_non_linear_darkfield_1_15.tif")  
-
-# Check dark field image 1/15 statistics: means, median, std    
-print("Dark Field 1/15 seconds statistics:")
-print(f"Mean: {np.mean(combined_darkfield_1_15)}")      
-print(f"Median: {np.median(combined_darkfield_1_15)}")
-print(f"Standard Deviation: {np.std(combined_darkfield_1_15)}")
-
-
-#%%
-
-# Analyze individual dark field images for 1.3 seconds setup
-darkfield_1__3_image_info = extract_image_Information(darkfield_1__3_json_name, file_path)
-print("Dark Field 1.3 seconds individual image statistics:")   
-for tif_name, cr2_path, tif_path, shutter_speed in darkfield_1__3_image_info:
-    green_channel = extract_green_channel(tif_path)
-    print(f"Image: {tif_name}, Shutter Speed: {shutter_speed}")
-    print(f"Mean: {np.mean(green_channel)}")      
-    print(f"Median: {np.median(green_channel)}")
-    print(f"Standard Deviation: {np.std(green_channel)}")
-    print("--------------------------------------------------")
-
-
-# Combine dark field images for 1.3 seconds setup
-combined_darkfield_1__3 = average_non_linear_darkfield(file_path, darkfield_1__3_json_name, Result_file_name="average_non_linear_darkfield_1__3.tif")  
-
-# Check dark field image 1.3 statistics: means, median, std
-print("Dark Field 1.3 seconds statistics:")
-print(f"Mean: {np.mean(combined_darkfield_1__3)}")      
-print(f"Median: {np.median(combined_darkfield_1__3)}")
-print(f"Standard Deviation: {np.std(combined_darkfield_1__3)}")
-
-
-####################### Extract and combine diffraction images ###############
-#%%
-# Combine all center peak of the diffraction images
-combined_image = combine_images(file_path, center_json_name, Result_file_name="center_averaged_image.tif") 
-
-#%%
-# Display the combined image in natural log scale
-combined_image_log = np.log(combined_image + 100000)  # add 1 to avoid log(0)
-plt.imshow(combined_image_log, cmap='gray')
-plt.title('Averaged Image (Log Scale)')
-plt.colorbar()
-plt.show()
-
-#%%
-# Plot the central horizontal cross-section of the averaged image in log scale 
-central_row = combined_image[combined_image.shape[0] // 2, :]
-plt.plot(np.log(central_row + 100000))  # add 1 to avoid log(0)
-plt.title('Central Horizontal Cross-Section of Averaged Image (Log Scale)')
-plt.xlabel('Pixel Position')
-plt.ylabel('Intensity (log scale)')
-plt.show() 
-
-#%%
-# Combine all left peak of the diffraction images
-left_json_name = "left_1__3_20260126_225055_metadata.json"
-combined_left_image = combine_images(file_path, left_json_name, Result_file_name="left_averaged_image.tif")
-
-#%%
-# Combine all right peak of the diffraction images
-right_json_name = "right_1__3_20260126_231335_metadata.json"
-combined_right_image = combine_images(file_path, right_json_name, Result_file_name="right_averaged_image.tif")
+# #%%
+# # Combine all right peak of the diffraction images
+# right_json_name = "right_1__3_20260126_231335_metadata.json"
+# combined_right_image = combine_images(file_path, right_json_name, Result_file_name="right_averaged_image.tif")
 
 
 
