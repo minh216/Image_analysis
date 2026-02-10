@@ -188,6 +188,13 @@ def extract_motor_position(json_name, file_path):
 test_cr2_path =  pathlib.Path("C:/Users/HDao/Dropbox/2026/Single Slit Diffraction/test pixel of raw conversion/capt0000.cr2")
 test_jpg_path = pathlib.Path("C:/Users/HDao/Dropbox/2026/Single Slit Diffraction/test pixel of raw conversion/capt0000.jpg")
 test_pixel_tif_path, test_pixel_tif_array = convert_cr2_to_tif(test_cr2_path, tif_folder_name="test_pixel_tif_images") # convert the test CR2 file to tif and save in a new folder called "test_pixel_tif_images" in the same directory as the test CR2 file
+#plot the horizontal profile of test_pixel_tif_array for each of the RGB channels to make sure the RGB match with tif image
+plt.plot(test_pixel_tif_array[test_pixel_tif_array.shape[0] // 2, :, 0], label='TIF Red Channel', marker='^', color='red', alpha=0.2)
+plt.plot(test_pixel_tif_array[test_pixel_tif_array.shape[0] // 2, :, 1], label='TIF Green Channel', marker='^', color='green', alpha=0.2)
+plt.plot(test_pixel_tif_array[test_pixel_tif_array.shape[0] // 2, :, 2], label='TIF Blue Channel', marker='^', color='blue', alpha=0.2)
+plt.title('Horizontal Profile of RGB Channels for Test Pixel TIF')  
+
+#%%
 test_pixel_jpg = cv2.imread(str(test_jpg_path))  # read the test JPG file
 test_pixel_jpg = cv2.cvtColor(test_pixel_jpg, cv2.COLOR_BGR2RGB)  # convert from BGR to RGB color space
 #plot the horizontal profile of test_pixel_jpg for each of the RGB channels to make sure the RGB match with tif image
