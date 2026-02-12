@@ -283,6 +283,14 @@ plt.plot(horizontal_profile_combined, label='Horizontal Profile of Combined Imag
 plt.legend()
 plt.show()
 
+# combine the horizontal profile of the next 3 pixel up and next 3 pixel down of the brightest spot
+horizontal_profile_combined = np.sum(combined_image[y_combined-3:y_combined+3, :], axis=0)  # average the horizontal profile of the next 3 pixel up and next 3 pixel down of the brightest spot
+# plot the combined horizontal profile
+plt.figure()
+plt.plot(horizontal_profile_combined, label='Combined Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+plt.legend()    
+plt.show()
+
 # fit the horizontal profile of the combined image to a sinc function to find the single slit width
 
 # define the wave length of laser used
@@ -347,6 +355,10 @@ plt.plot(horizontal_profile_derivative, label='Derivative of Smoothed Horizontal
 plt.axhline(0, color='red', linestyle='--', label='y=0')
 plt.legend()    
 plt.show()
+
+# where the derivative crosses y = 0
+crossing_indices = np.where(np.diff(np.sign(horizontal_profile_derivative)))[0]
+print(f"Indices where the derivative crosses y=0: {crossing_indices}")  
 
 
 
