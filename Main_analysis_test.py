@@ -270,4 +270,148 @@ plt.title('Combined Image')
 plt.colorbar()
 plt.show()
 
+#%%
+# extract the green channel of the combined image and plot the vertical and horizontal 
+# Find the brightest spot in the combined image
+brightest_spot_combined, max_value_combined = find_brightest_spot(combined_image)
+x_combined, y_combined = brightest_spot_combined
+print(f"Brightest spot in combined image: x={x_combined}, y={y_combined}, value={max_value_combined}")
 
+vertical_profile_combined, horizontal_profile_combined = V_H_profiles(combined_image, x_combined, y_combined)
+plt.figure()
+plt.plot(horizontal_profile_combined, label='Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)     
+plt.legend()
+plt.show()
+
+# fit the horizontal profile of the combined image to a sinc function to find the single slit width
+
+# define the wave length of laser used
+wavelength = 532e-9  # wavelength in meters (532 nm for green laser)
+
+# define the pixel size in meter so we know the scale of x axis for the horizontal profile
+pixel_size = 4.31e-6  # pixel size in meters (4.31 micrometers)
+
+# generate x values for the horizontal profile in meters
+x_values = (np.arange(len(horizontal_profile_combined)) - x_combined) * pixel_size  # x values in meters centered around the brightest spot
+# print the x values for the horizontal profile
+print(f"x values for horizontal profile (in meters): {x_values}")
+
+# define the distance from the slit to the screen in meters (this should be measured from the experimental setup) 375 mm is the distance from the slit to the screen in the experiment, but we can use 1 m as an example value for testing the fitting procedure. The actual value should be replaced with the measured distance from the experimental setup for accurate fitting results.
+distance_slit_to_screen = 0.375  # distance from slit to screen in meters (example value, replace with actual measurement)
+
+
+
+#%%
+# fit the horizontal profile to a sinc square function for intensity to find the slit width
+def sinc_function(x, A, a, x0  , offset):
+    """Sinc function for single slit diffraction pattern."""
+    return (A * (np.sinc((a * np.sin(np.arctan((x - x0) / distance_slit_to_screen))) / wavelength)) + offset)**2
+# initial guess for the fitting parameters: A, a, x0, offset
+initial_guess = [max_value_combined, 0.1e-3, 0, np.min(horizontal_profile_combined)]  # A, a, x0, offset
+try:
+    popt, _ = curve_fit(sinc_function, x_values, horizontal_profile_combined, p0=initial_guess)
+    fitted_A, fitted_a, fitted_x0, fitted_offset = popt
+    print(f"Fitted parameters: A={fitted_A}, a={fitted_a}, x0={fitted_x0}, offset={fitted_offset}") 
+    #plot the horizontal profile and the fitted sinc function
+    plt.figure()    
+    plt.plot(x_values, horizontal_profile_combined, label='Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+    plt.plot(x_values, sinc_function(x_values, *popt), label='Fitted Sinc Function')
+    plt.legend()    
+    plt.show()
+except RuntimeError:
+    print("Error: Curve fitting failed.")
+    fitted_A, fitted_a, fitted_x0, fitted_offset = None, None, None, None
+
+# make a guess plot of the sinc function with all the parameters form the fit except for a flexible slit width a to see how the fitting looks with different slit widths
+a_values = 81e-6  # example slit width in meters (82 micrometers)
+plt.figure()
+plt.plot(x_values, horizontal_profile_combined, label='Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+plt.plot(x_values, sinc_function(x_values, fitted_A, a_values, fitted_x0, fitted_offset), label=f'Guess Sinc Function with a={a_values*1e6:.1f} micrometers')
+plt.legend()    
+plt.show()
+
+#%%
+# rolling average the horizontal profile to smooth out the horizontal_profile_combined
+window_size = 30  # size of the rolling average window
+horizontal_profile_smoothed = np.convolve(horizontal_profile_combined, np.ones(window_size)/window_size, mode='valid')
+plt.figure()
+plt.plot(horizontal_profile_smoothed, label='Smoothed Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+plt.legend()    
+plt.show()
+
+# find the derivative of the rolling average with the x axis showing at y = 0 to see where the peaks and troughs are in the horizontal profile
+horizontal_profile_derivative = np.gradient(horizontal_profile_smoothed)
+#add a line through y = 0 to the plot of the derivative to see where the peaks and troughs are in the horizontal profile
+plt.figure()
+plt.plot(horizontal_profile_derivative, label='Derivative of Smoothed Horizontal Profile', marker='o', markersize = 0.5, alpha=0.2)
+plt.axhline(0, color='red', linestyle='--', label='y=0')
+plt.legend()    
+plt.show()
+
+
+
+# # output the horizontal profile as ascii file
+# ascii_file_path = file_path / "combined_results" / "horizontal_profile_combined.txt"
+# np.savetxt(ascii_file_path, horizontal_profile_combined)        
+
+# brightest_spot_combined, max_value_combined = find_brightest_spot(combined_image)
+# x_combined, y_combined = brightest_spot_combined  
+# print(f"brightest spot location inx_combined: {x_combined}, y_combined: {y_combined}, max value: {max_value_combined}")
+
+# # length of the horizontal profile
+# horizontal_profile_length = combined_image.shape[1]
+# print(f"Length of horizontal profile: {horizontal_profile_length}")     
+
+# # cut amount for the horizontal profile
+# cut_amount = int(horizontal_profile_length/2 - x_combined)
+# print(f"Cut amount for horizontal profile: {cut_amount}")
+
+# # where to cut left or right of the horizontal profile
+# if cut_amount > 0:
+#     print("Cutting left side of the horizontal profile")
+#     # cut the left side by twice the cut amount. start the index of the cut horizontal profile at twice the cut amount instead of 0
+#     horizontal_profile_cut = horizontal_profile_combined[2*cut_amount:]
+#     #plot the cut horizontal profile
+#     plt.figure()
+#     plt.plot(horizontal_profile_cut, label='Cut Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+#     plt.legend()
+#     plt.show()  
+
+    
+# if cut_amount < 0:
+#     print("Cutting right side of the horizontal profile")
+#     horizontal_profile_cut = horizontal_profile_combined[:abs(2*cut_amount)]
+
+
+# else:
+#     print("No cutting needed for the horizontal profile")
+#     horizontal_profile_cut = horizontal_profile_combined    
+
+# # plot the cut horizontal profile
+# plt.figure()
+# plt.plot(horizontal_profile_cut, label='Cut Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+# plt.legend()
+# plt.show()  
+
+
+
+
+# # cut either the left side or right side of the horizontal profile so the brightest spot is in the middle don't need to preserve the kernel size
+# # find the cut is left or right by comparing the x_combined to the center of the image
+# # the cute amount is determined by the distance from the brightest spot to the center of the image, so the kernel size is not preserved but the brightest spot is in the middle of the cut profile
+# cut_amount =  int(abs(x_combined - combined_image.shape[1] // 2))   
+# if x_combined < combined_image.shape[1] // 2:
+#     # cut the right side by twice the cut amount
+#     horizontal_profile_cut = horizontal_profile_combined[:x_combined + (2*cut_amount)]
+# else:
+#     # cut the left side by twice the cut amount
+#     horizontal_profile_cut = horizontal_profile_combined[x_combined - (2*cut_amount):]
+# # plot the cut horizontal profile
+# plt.figure()
+# plt.plot(horizontal_profile_cut, label='Cut Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+# plt.legend()    
+# plt.show()
+
+
+
+# %%
