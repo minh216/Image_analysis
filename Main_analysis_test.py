@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 import scipy
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
+# import SciencePlots
+
+# plt.style.use('muted')
 
 # uni laptop path
 file_path = pathlib.Path(r"C:\Users\HDao\Dropbox\2026\Single Slit Diffraction\Single_slit_diffraction_serious_26_01_26") # folder containting the JSON file
@@ -448,7 +451,7 @@ print(f"Indices where the derivative crosses y=0: {crossing_indices}")
 def gaussian_kernel_1d(size, sigma):
     if size % 2 == 0:
         size += 1  # make size odd to preserve the center of the kernel 
-        print(f"Kernel size adjusted to {size} to make it odd for preserving the center of the kernel.")
+        # print(f"Kernel size adjusted to {size} to make it odd for preserving the center of the kernel.")
 
     """Generate a 1D Gaussian kernel."""
     ax = np.linspace(-(size / 2), size / 2, size)
@@ -461,10 +464,10 @@ def gaussian_kernel_1d(size, sigma):
 def cross_correlate_with_1D_gaussian(horizontal_profile_combined, kernel_size, sigma):
     kernel = gaussian_kernel_1d(kernel_size, sigma)
     #plot the kernel
-    plt.figure()
-    plt.plot(kernel, label='1D Gaussian Kernel')    
-    plt.legend()
-    plt.show()
+    # plt.figure()
+    # plt.plot(kernel, label='1D Gaussian Kernel')    
+    # plt.legend()
+    # plt.show()
     correlation = np.correlate(horizontal_profile_combined, kernel, mode='same')
     return correlation  
 # test on the horizontal profile of the combined image
@@ -520,7 +523,7 @@ distance_slit_to_screen = 0.375  # distance from slit to screen in meters (examp
 # not happy with the previous function let try only for the first order troughs. the order is fo the trough is not correct since it is determined by when it minus the central peak. find the all the distances firt, sort it from smallest distance to farthest then assign the order based on the sorted distance. the closest trough is the first order, the second closest trough is the second order, and so on. this way we can ensure that the order of the troughs is determined by their actual distance from the central peak rather than their position in the list of trough indices.
 
 # define a function to find th distance between the central peaks and the troughs indexes in correlation_troughs_indices and combined with the integer m for the order into a tupple together with distance by sorted by closest 
-def find_trough_distances_and_orders(peak_indices, trough_indices, horizontal_profile_combined):
+def find_trough_distances_and_orders(peak_indices, trough_indices, horizontal_profile_combined, pixel_size, wavelength, distance_slit_to_screen):
     # initialize the tuple for left and right trough distances and orders
     trough_distances_orders_left = []
     trough_distances_orders_right = []  
@@ -570,7 +573,86 @@ def find_trough_distances_and_orders(peak_indices, trough_indices, horizontal_pr
 
 
 #test the function to find the trough distances and orders
-trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(correlation_peaks_indices, correlation_troughs_indices, horizontal_profile_combined)   
+trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(correlation_peaks_indices, correlation_troughs_indices, horizontal_profile_combined, pixel_size, wavelength, distance_slit_to_screen)   
 
+
+# %%
+# inspecting the vertical profile of the combined images to determine the other horizontal profile available from the diffraction
+# plot the vertical profile of the combined image at the brightest spot location
+vertical_profile_combined, horizontal_profile_combined = V_H_profiles(combined_image, x_combined, y_combined)
+plt.figure()    
+plt.plot(vertical_profile_combined, label='Vertical Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+plt.legend()
+plt.show()
+
+# # use plotly
+# import plotly.graph_objects as go   
+# fig = go.Figure()
+# fig.add_trace(go.Scatter(x=np.arange(len(vertical_profile_combined)), y=vertical_profile_combined, mode='lines+markers', name='Vertical Profile of Combined Image'))
+# fig.update_layout(title='Vertical Profile of Combined Image', xaxis_title='Pixel Index', yaxis_title='Intensity', showlegend=True)
+# fig.show()  
+
+
+# %%
+# from visual inspeciton of the vertical profile I determine that the pixels from 2100 to 2900 contain the other horizontal profile
+
+# extract the all the horizontal profiles of interest by cutting out just the part defined above from the combined image
+horizontal_profiles_of_interest = combined_image[2590:2604, :]
+# image the area of interest
+plt.figure()
+plt.imshow(horizontal_profiles_of_interest, cmap='gray')    
+plt.title('Area of Interest in Combined Image')
+plt.colorbar()
+plt.show()
+
+
+# %%
+# define a function that take in the combined image, the vertical range of interest, use the find_trough_distances_and_orders function to find all the slit estimate and uncertainty for all horizontal in the area of interest and output the average slit width estimate and uncertainty across all the horizontal profiles in the area of interest
+# the function will also output the slit width estimates and uncertainties for each horizontal profile in the area of interest in a list of tuples together with the vertical position of the horizontal profile in the combined image
+def analyze_horizontal_profiles_in_area_of_interest(combined_image, vertical_range, pixel_size, wavelength, distance_slit_to_screen):
+    slit_width_estimates_uncertainties = []  # list to store slit width estimates and uncertainties for each horizontal profile
+    for y in range(vertical_range[0], vertical_range[1]):
+        horizontal_profile = combined_image[y, :]
+        inverted_horizontal_profile = -horizontal_profile
+        correlation_result = cross_correlate_with_1D_gaussian(horizontal_profile, kernel_size=500, sigma=25)
+        correlation_result_inverted = cross_correlate_with_1D_gaussian(inverted_horizontal_profile, kernel_size=500, sigma=25)
+        correlation_peaks_indices, _ = find_peaks(correlation_result, distance=400)
+        correlation_troughs_indices, _ = find_peaks(correlation_result_inverted, distance=400) 
+        #plot the horizontal profile and the peaks and troughs for each horizontal profile in the area of interest
+        # plt.figure()
+        # plt.plot(horizontal_profile, label=f'Horizontal Profile at y={y}', marker='o', markersize = 0.5, alpha=0.2)
+        # plt.plot(correlation_peaks_indices, horizontal_profile[correlation_peaks_indices], 'rx', label='Peaks from Correlation Result')
+        # plt.plot(correlation_troughs_indices, horizontal_profile[correlation_troughs_indices], 'g+', label='Troughs from Correlation Result')
+        # plt.legend()    
+        # plt.title(f'Horizontal Profile and Peaks/Troughs at y={y}')
+        # plt.show()  
+        # add a pause after each plot to allow for inspection of the peaks and troughs before moving on to the next horizontal profile
+        # input("Press Enter to continue to the next horizontal profile...")
+    
+        trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(correlation_peaks_indices, correlation_troughs_indices, horizontal_profile, pixel_size, wavelength, distance_slit_to_screen)
+        slit_width_estimates_uncertainties.append((y, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order))
+    
+    # calculate the average slit width estimate and uncertainty across all horizontal profiles in the area of interest
+    average_slit_width_estimate_across_profiles = np.mean([estimate for _, estimate, _ in slit_width_estimates_uncertainties])
+    average_uncertainty_across_profiles = np.mean([uncertainty for _, _, uncertainty in slit_width_estimates_uncertainties])
+
+    # standard deviation of all left and right slit width estimates from all horizontal profiles in the area of interest
+    all_slit_width_estimates = [estimate for _, estimate, _ in slit_width_estimates_uncertainties]
+    std_slit_width_estimates_across_profiles = np.std(all_slit_width_estimates)
+    
+    # standard error from standard deviation and number of profiles
+    standard_error_slit_width_estimates_across_profiles = std_slit_width_estimates_across_profiles / np.sqrt(len(slit_width_estimates_uncertainties))
+
+
+    print(f"Average slit width estimate across all horizontal profiles in the area of interest: {average_slit_width_estimate_across_profiles:.6e} meters, or {average_slit_width_estimate_across_profiles*1e6:.2f} micrometers")
+    print(f"Average uncertainty across all horizontal profiles in the area of interest: {average_uncertainty_across_profiles:.6e} meters, or {average_uncertainty_across_profiles*1e6:.2f} micrometers")      
+    print(f"Standard deviation of slit width estimates across all horizontal profiles in the area of interest: {std_slit_width_estimates_across_profiles:.6e} meters, or {std_slit_width_estimates_across_profiles*1e6:.2f} micrometers")
+    print(f"Standard error of slit width estimates across all horizontal profiles in the area of interest: {standard_error_slit_width_estimates_across_profiles:.6e} meters, or {standard_error_slit_width_estimates_across_profiles*1e6:.2f} micrometers") 
+
+    return slit_width_estimates_uncertainties, average_slit_width_estimate_across_profiles, average_uncertainty_across_profiles  
+
+# test the function to analyze the horizontal profiles in the area of interest
+vertical_range_of_interest = (2597-50, 2597+50)  # vertical range of interest
+slit_width_estimates_uncertainties, average_slit_width_estimate_across_profiles, average_uncertainty_across_profiles = analyze_horizontal_profiles_in_area_of_interest(combined_image, vertical_range_of_interest, pixel_size, wavelength, distance_slit_to_screen) 
 
 # %%
