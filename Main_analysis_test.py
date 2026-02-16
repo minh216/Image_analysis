@@ -8,6 +8,7 @@ import tifffile
 import matplotlib.pyplot as plt
 import scipy
 from scipy.optimize import curve_fit
+from scipy.signal import find_peaks
 
 # uni laptop path
 file_path = pathlib.Path(r"C:\Users\HDao\Dropbox\2026\Single Slit Diffraction\Single_slit_diffraction_serious_26_01_26") # folder containting the JSON file
@@ -424,6 +425,152 @@ print(f"Indices where the derivative crosses y=0: {crossing_indices}")
 # plt.legend()    
 # plt.show()
 
+
+
+# # %%
+# # define a new fitting to find the width of the slit by locating the trough of the minima in the horizontal profile
+
+# # invert the horizontal profile to use find_peaks function to find the troughs instead of peaks
+# from scipy.signal import find_peaks
+# inverted_horizontal_profile = -horizontal_profile_combined  
+# # find the troughs in the horizontal profile by finding the peaks in the inverted horizontal profile
+# trough_indices, _ = find_peaks(inverted_horizontal_profile, distance=500)  # distance parameter to avoid finding peaks that are too close to each other
+
+# # plot the horizontal profile and the troughs
+# plt.figure()
+# plt.plot(horizontal_profile_combined, label='Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+# plt.plot(trough_indices, horizontal_profile_combined[trough_indices], 'rx', label='Troughs')
+# plt.legend()
+# plt.show()  
+
+#%%
+# define a function to generate 1D Gaussian kernel make sure it's odd to preserve the center of the kernel  
+def gaussian_kernel_1d(size, sigma):
+    if size % 2 == 0:
+        size += 1  # make size odd to preserve the center of the kernel 
+        print(f"Kernel size adjusted to {size} to make it odd for preserving the center of the kernel.")
+
+    """Generate a 1D Gaussian kernel."""
+    ax = np.linspace(-(size / 2), size / 2, size)
+    kernel = np.exp(-0.5 * (ax / sigma) ** 2)
+    return kernel / np.sum(kernel)  
+
+
+# new peak method by cross correlate the horizontal profile with a Gaussian kernel to find the peaks and troughs more accurately
+# define a function to cross correlate the horizontal profile with a Gaussian kernel
+def cross_correlate_with_1D_gaussian(horizontal_profile_combined, kernel_size, sigma):
+    kernel = gaussian_kernel_1d(kernel_size, sigma)
+    #plot the kernel
+    plt.figure()
+    plt.plot(kernel, label='1D Gaussian Kernel')    
+    plt.legend()
+    plt.show()
+    correlation = np.correlate(horizontal_profile_combined, kernel, mode='same')
+    return correlation  
+# test on the horizontal profile of the combined image
+
+inverted_horizontal_profile = -horizontal_profile_combined
+
+#plot the horizontal_profile_combined to check
+plt.figure()
+plt.plot(horizontal_profile_combined, label='Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+plt.legend()    
+plt.show()
+
+# plot the inverted horizontal profile to check
+plt.figure()
+plt.plot(inverted_horizontal_profile, label='Inverted Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+plt.legend()        
+plt.show()
+
+#%%
+kernel_size = 100  # example kernel size in pixels (adjust based on the expected width of the peaks and troughs)
+sigma = 25  # example sigma for the Gaussian kernel (adjust based on the expected width of the peaks and troughs) 
+correlation_result = cross_correlate_with_1D_gaussian(horizontal_profile_combined, kernel_size, sigma)
+correlation_result_inverted = cross_correlate_with_1D_gaussian(inverted_horizontal_profile, kernel_size, sigma) 
+# plot the correlation result
+plt.figure()
+plt.plot(correlation_result, label='Cross Correlation with 1D Gaussian Kernel', marker='o', markersize = 0.5, alpha=0.2)
+plt.legend()    
+plt.show()
+
+# plot the correlation result for the inverted horizontal profile
+plt.figure()
+plt.plot(correlation_result_inverted, label='Cross Correlation with 1D Gaussian Kernel for Inverted Horizontal Profile', marker='o', markersize = 0.5, alpha=0.2)
+plt.legend()    
+plt.show()  
+
+# find peaks in the correlation result for horizontal profile and inverted horizontal profile to find peaks and trough
+correlation_peaks_indices, _ = find_peaks(correlation_result, distance=500)
+correlation_troughs_indices, _ = find_peaks(correlation_result_inverted, distance=50)      
+#plot the peaks and troughs locations on the original horizontal profile
+plt.figure()
+plt.plot(horizontal_profile_combined, label='Horizontal Profile of Combined Image', marker='o', markersize = 0.5, alpha=0.2)
+plt.plot(correlation_peaks_indices, horizontal_profile_combined[correlation_peaks_indices], 'rx', label='Peaks from Correlation Result')
+plt.plot(correlation_troughs_indices, horizontal_profile_combined[correlation_troughs_indices], 'g+', label='Troughs from Correlation Result')
+plt.legend()
+plt.show()  
+
+# find the distance between the central peak the troughs on the left and right to estimate the slit width using the single slit diffraction formula
+#%%
+pixel_size = 4.31e-6  # pixel size in meters (4.31 micrometers)
+wavelength = 532e-9  # wavelength in meters (532 nm for green laser)
+distance_slit_to_screen = 0.375  # distance from slit to screen in meters (example value, replace with actual measurement)  
+
+# not happy with the previous function let try only for the first order troughs. the order is fo the trough is not correct since it is determined by when it minus the central peak. find the all the distances firt, sort it from smallest distance to farthest then assign the order based on the sorted distance. the closest trough is the first order, the second closest trough is the second order, and so on. this way we can ensure that the order of the troughs is determined by their actual distance from the central peak rather than their position in the list of trough indices.
+
+# define a function to find th distance between the central peaks and the troughs indexes in correlation_troughs_indices and combined with the integer m for the order into a tupple together with distance by sorted by closest 
+def find_trough_distances_and_orders(peak_indices, trough_indices, horizontal_profile_combined):
+    # initialize the tuple for left and right trough distances and orders
+    trough_distances_orders_left = []
+    trough_distances_orders_right = []  
+    # identify the central peak index as the one with the maximum value in the horizontal profile
+    central_peak_index = peak_indices[np.argmax(horizontal_profile_combined[peak_indices])] 
+    # for loop to go through each trough index and sort them into left and right troughs based on their position relative to the central peak, and calculate the distance from the central peak to each trough and determine the order of the trough on the left and right
+    # the order of the trough is determined by the distance from the central peak to the trough, with the closest trough being the first order (m=1), the second closest trough being the second order (m=2), and so on. The distance from the central peak to each trough is calculated in meters using the pixel size, and then used to estimate the slit width using the single slit diffraction formula: a = (m * wavelength * distance_slit_to_screen) / x, where m is the order of the minima, wavelength is the wavelength of the laser, distance_slit_to_screen is the distance from the slit to the screen, and x is the distance from the central peak to the minima (trough) in meters.   
+    for trough_index in trough_indices:
+        distance_in_pixels = abs(trough_index - central_peak_index)
+        distance_in_meters = distance_in_pixels * pixel_size
+        # find angle of diffraction theta as the arctan of the distance from the central peak to the trough divided by the distance from the slit to the screen
+        theta = np.arctan(distance_in_meters / distance_slit_to_screen) 
+        if trough_index < central_peak_index:
+            # add the new found distance to the list of trough distances
+            trough_distances_orders_left.append((trough_index, distance_in_meters, theta))
+        else:
+            trough_distances_orders_right.append((trough_index, distance_in_meters, theta))
+    
+    # sort the trough distances and orders by distance from the central peak    
+    trough_distances_orders_left.sort(key=lambda x: abs(x[1]))  # sort by distance
+    trough_distances_orders_right.sort(key=lambda x: abs(x[1]))  # sort by distance  
+    # assign the order based on the sorted distance for left troughs
+    for i, trough_info in enumerate(trough_distances_orders_left):
+        trough_index, distance_in_meters, theta = trough_info
+        order = -(i + 1)  # order is negative for left troughs
+        slit_width_estimate = (abs(order) * wavelength * distance_slit_to_screen) / distance_in_meters
+        trough_distances_orders_left[i] = (trough_index, distance_in_meters, order, slit_width_estimate, theta)    
+    # assign the order based on the sorted distance for right troughs
+    for i, trough_info in enumerate(trough_distances_orders_right):
+        trough_index, distance_in_meters, theta = trough_info
+        order = i + 1  # order is positive for right troughs
+        slit_width_estimate = (order * wavelength * distance_slit_to_screen) / distance_in_meters
+        trough_distances_orders_right[i] = (trough_index, distance_in_meters, order, slit_width_estimate, theta)     
+    
+    # Analyze the trough distances for the first order left and right troughs and output the mean value and the uncertainty 
+    average_estimated_slit_width_from_first_order = []
+    # get the average of the slit width estimates from the first order troughs on the left and right
+    average_estimated_slit_width_from_first_order = (trough_distances_orders_left[0][3] + trough_distances_orders_right[0][3])/2 # slit width estimate from the first order trough on the left
+    # calculate the uncertainty as the absolute difference between the slit width estimates from the first order troughs on the left and right
+    uncertainty_estimated_slit_width_from_first_order = abs(trough_distances_orders_left[0][3] - trough_distances_orders_right[0][3]) / 2 # uncertainty is half the difference between the slit width estimates from the first order troughs
+    print(f"Estimated slit width from the first order trough on the left: {trough_distances_orders_left[0][3]:.6e} meters, or {trough_distances_orders_left[0][3]*1e6:.2f} micrometers")
+    print(f"Estimated slit width from the first order trough on the right: {trough_distances_orders_right[0][3]:.6e} meters, or {trough_distances_orders_right[0][3]*1e6:.2f} micrometers")
+    print(f"Average estimated slit width from the first order troughs: {average_estimated_slit_width_from_first_order:.6e} meters, or {average_estimated_slit_width_from_first_order*1e6:.2f} micrometers")
+    print(f"Uncertainty in estimated slit width from the first order troughs: {uncertainty_estimated_slit_width_from_first_order:.6e} meters, or {uncertainty_estimated_slit_width_from_first_order*1e6:.2f} micrometers")      
+    return trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order    
+
+
+
+#test the function to find the trough distances and orders
+trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(correlation_peaks_indices, correlation_troughs_indices, horizontal_profile_combined)   
 
 
 # %%
