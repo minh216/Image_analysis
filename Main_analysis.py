@@ -19,6 +19,9 @@ image_test_file_path_jpg = pathlib.Path(r"C:\Users\HDao\Dropbox\2026\Single Slit
 # image_test_file_path_CR2 = pathlib.Path(r"C:\Users\mnhda\Dropbox\2026\Single Slit Diffraction\test pixel of raw conversion 2\Extra_Pixel_test.CR2")
 # image_test_file_path_jpg = pathlib.Path(r"C:\Users\mnhda\Dropbox\2026\Single Slit Diffraction\test pixel of raw conversion 2\Extra_Pixel_test.jpg")
 
+# macbook path
+
+
 # JSON file names for center, left, right images and dark field images for 1/15 seconds and 1.3 seconds setup
 center_json_name = "center_1_15_20260126_215858_metadata.json" # name of the JSON file
 left_json_name = "left_1__3_20260126_225055_metadata.json"
