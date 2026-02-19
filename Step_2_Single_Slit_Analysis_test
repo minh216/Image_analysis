@@ -42,10 +42,10 @@ def gaussian_kernel_1d(size, sigma):
     return kernel / np.sum(kernel)  
 
 # define a function to find the distance between the central peaks and the troughs indexes in correlation_troughs_indices and combined with the integer m for the order into a tupple together with distance by sorted by closest 
-def find_trough_distances_and_orders(horizontal_profile_combined, pixel_size, wavelength, distance_slit_to_screen):
+def find_trough_distances_and_orders(horizontal_profile_combined, pixel_size, wavelength, distance_slit_to_screen, kernel_size=500, sigma=25):
     # find the peaks and troughs from the horizontal profile of the combined image using by correlating with a guassian kernel
-    kernel_size = 501  # size of the Gaussian kernel(larger is better but slower too small and risk finding peaks in noise) need to be odd for the kernel to be symmetric
-    sigma = 25  # standard deviation of the Gaussian kernel (too small then increase the risk of finding peaks in noise, too large the accruracy of finding the peaks and troughs will decrease)
+    # kernel_size = 2001  # size of the Gaussian kernel(larger is better but slower too small and risk finding peaks in noise) need to be odd for the kernel to be symmetric
+    # sigma = 27  # standard deviation of the Gaussian kernel (too small then increase the risk of finding peaks in noise, too large the accruracy of finding the peaks and troughs will decrease)
     kernel = gaussian_kernel_1d(kernel_size, sigma)  # create the Gaussian kernel
     inverted_profile = -horizontal_profile_combined  # invert the profile to find troughs as peaks
     correlation_peak = np.correlate(horizontal_profile_combined, kernel, mode='same')  # correlate the inverted profile with the Gaussian kernel
@@ -99,15 +99,16 @@ def find_trough_distances_and_orders(horizontal_profile_combined, pixel_size, wa
 
 # define a function that take in the combined image, the vertical range of interest, use the find_trough_distances_and_orders function to find all the slit estimate and uncertainty for all horizontal in the area of interest and output the average slit width estimate and uncertainty across all the horizontal profiles in the area of interest
 # the function will also output the slit width estimates and uncertainties for each horizontal profile in the area of interest in a list of tuples together with the vertical position of the horizontal profile in the combined image
-def analyze_horizontal_profiles_in_area_of_interest(combined_image, vertical_range, pixel_size, wavelength, distance_slit_to_screen):
+def analyze_horizontal_profiles_in_area_of_interest(combined_image, vertical_range, pixel_size, wavelength, distance_slit_to_screen, kernel_size=500, sigma=25):
     slit_width_estimates_uncertainties = []  # list to store slit width estimates and uncertainties for each horizontal profile
     for y in range(vertical_range[0], vertical_range[1]):
        
        horizontal_profile = combined_image[y, :]
-       trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(horizontal_profile, pixel_size, wavelength, distance_slit_to_screen)
+       trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(horizontal_profile, pixel_size, wavelength, distance_slit_to_screen, kernel_size, sigma)
        slit_width_estimates_uncertainties.append((y, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order))
+       print(f"Vertical incdex of the horizontal profile: {y})")
        print() # just a line bread for better readability in the output
-    
+
     # calculate the average slit width estimate and uncertainty across all horizontal profiles in the area of interest
     average_slit_width_estimate_across_profiles = np.mean([estimate for _, estimate, _ in slit_width_estimates_uncertainties])
     average_uncertainty_across_profiles = np.mean([uncertainty for _, _, uncertainty in slit_width_estimates_uncertainties])
@@ -185,15 +186,14 @@ pixel_size = 4.31e-6  # pixel size in meters (4.31 micrometers)
 wavelength = 532e-9  # wavelength of the green laser in meters (532 nm)
 distance_slit_to_screen = 0.375  # distance from the slit to the screen in meters (0.375 meters)
 # test find_trough_distances_and_orders function on the horizontal profile of the combined image at the brightest point to find the trough distances and orders and slit width estimates from the first order troughs on the left and right
-trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(horizontal_profile_combined, pixel_size, wavelength, distance_slit_to_screen)
+trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(horizontal_profile_combined, pixel_size, wavelength, distance_slit_to_screen, kernel_size=500, sigma=25)
 
 
 #%%
-vertical_range_of_interest = (brightest_point[0]-50, brightest_point[0]+50)  # vertical range of interest for analyzing horizontal profiles for 50 lines above and below the brightest point
+print("index of the brightest point in the vertical direction: ", brightest_point[0])
+print() # just a line bread for better readability in the output
+vertical_range_of_interest = (brightest_point[0]-20, brightest_point[0]+20)  # vertical range of interest for analyzing horizontal profiles for 50 lines above and below the brightest point
 # find the slits width estimates and uncertainties for a range of interest
-slit_width_estimates_uncertainties, average_slit_width_estimate_across_profiles, average_uncertainty_across_profiles = analyze_horizontal_profiles_in_area_of_interest(center_averaged_image, vertical_range_of_interest, pixel_size, wavelength, distance_slit_to_screen)
-
-
-
+slit_width_estimates_uncertainties, average_slit_width_estimate_across_profiles, average_uncertainty_across_profiles = analyze_horizontal_profiles_in_area_of_interest(center_averaged_image, vertical_range_of_interest, pixel_size, wavelength, distance_slit_to_screen, kernel_size=500, sigma=25)
 
 # %%
