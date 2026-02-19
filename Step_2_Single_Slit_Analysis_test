@@ -196,7 +196,7 @@ trough_distances_orders_left, trough_distances_orders_right, average_estimated_s
 #%%
 print("index of the brightest point in the vertical direction: ", brightest_point[0])
 print() # just a line bread for better readability in the output
-vertical_range_of_interest = (brightest_point[0]-100, brightest_point[0]+100)  # vertical range of interest for analyzing horizontal profiles for 50 lines above and below the brightest point
+vertical_range_of_interest = (brightest_point[0]-200, brightest_point[0]+200)  # vertical range of interest for analyzing horizontal profiles for 50 lines above and below the brightest point
 # find the slits width estimates and uncertainties for a range of interest
 slit_width_estimates_uncertainties, average_slit_width_estimate_across_profiles, average_uncertainty_across_profiles, trough_distances_left_list, trough_distances_right_list = analyze_horizontal_profiles_in_area_of_interest(center_averaged_image, vertical_range_of_interest, pixel_size, wavelength, distance_slit_to_screen, kernel_size=500, sigma=25)
 
@@ -228,7 +228,7 @@ ax2.set_ylim(0, 200)
 ax2.set_ylabel('Slit Width Estimate from First Order Troughs (microns)', color=color)  # we already handled the x-label with ax1
 ax2.plot(y_positions_left, np.array(slit_width_estimates_left)*1e6, color='blue', marker='x', label='Slit Width Estimate from Left Troughs')
 ax2.plot(y_posittion_right, np.array(slit_width_estimates_right)*1e6, color='orange', marker='x', label='Slit Width Estimate from Right Troughs')
-ax2.errorbar(y_position_left_right, np.array(slit_width_estimate_left_right)*1e6, yerr=np.array(slit_width_estimate_left_right_uncertainty)*1e6, color='pink', marker='+', label='Average Slit Width Estimate from Left and Right Troughs')
+ax2.errorbar(y_position_left_right, np.array(slit_width_estimate_left_right)*1e6, yerr=np.array(slit_width_estimate_left_right_uncertainty)*1e6, color='maroon', marker='+', label='Average Slit Width Estimate from Left and Right Troughs')
 #draw a horizontal line for the slit width estimate at 80 microns for reference
 ax2.axhline(y=80, color='black', linestyle='--', label='Reference Slit Width (80 microns)')
 ax2.legend(loc='upper right')       
