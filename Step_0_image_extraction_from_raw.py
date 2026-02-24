@@ -44,7 +44,8 @@ def extract_image_Information(json_name, file_path):
         Image_info = [
             {'image_name': capture.get('image_name', ''),
              'cr2_path': file_path / capture.get('image_name', ''),  # file path of cr2
-             'shutter_speed': shutter_speed_to_float(capture.get('camera_settings', {}).get('shutter_speed', '')),  # convert shutter speed to float in seconds
+             'shutter_speed': capture.get('camera_settings', {}).get('shutter_speed', ''),  # shutter speed as string
+             'shutter_speed_float': shutter_speed_to_float(capture.get('camera_settings', {}).get('shutter_speed', '')),  # convert shutter speed to float in seconds
              'iso': capture.get('camera_settings', {}).get('iso', ''),
              'motor_group3': capture.get('motor_groups', {}).get('Group3', {}).get('position', ''), # motor position nested in motor_groups, Group3
              'motor_group4': capture.get('motor_groups', {}).get('Group4', {}).get('position', ''), # motor position nested in motor_groups, Group4
