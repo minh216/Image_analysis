@@ -1,0 +1,214 @@
+{
+    "captures": [
+        {
+            "image_name": "darkfield1_20260219_153944_001.CR2",
+            "image_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26\\darkfield1_20260219_153944_001.CR2",
+            "experiment_folder": "Single_Slit_Multi_Distance_serious_19_02_26",
+            "vm_save_path": "/media/sf_Canon_Share/Experiment Photo/Single_Slit_Multi_Distance_serious_19_02_26",
+            "host_save_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26",
+            "date": "2026-02-19",
+            "time": "15:39:51",
+            "capture_time": "2026-02-19 15:39:51",
+            "timestamp": 1771475991.6269217,
+            "camera_settings": {
+                "shutter_speed": "1/15",
+                "iso": "100"
+            },
+            "motor_groups": {
+                "Group3": {
+                    "position": "304.6700",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group4": {
+                    "position": "61.3000",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group5": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group6": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group7": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                }
+            }
+        },
+        {
+            "image_name": "darkfield1_20260219_153944_002.CR2",
+            "image_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26\\darkfield1_20260219_153944_002.CR2",
+            "experiment_folder": "Single_Slit_Multi_Distance_serious_19_02_26",
+            "vm_save_path": "/media/sf_Canon_Share/Experiment Photo/Single_Slit_Multi_Distance_serious_19_02_26",
+            "host_save_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26",
+            "date": "2026-02-19",
+            "time": "15:39:59",
+            "capture_time": "2026-02-19 15:39:59",
+            "timestamp": 1771475999.7609036,
+            "camera_settings": {
+                "shutter_speed": "1/15",
+                "iso": "100"
+            },
+            "motor_groups": {
+                "Group3": {
+                    "position": "304.6700",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group4": {
+                    "position": "61.3000",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group5": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group6": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group7": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                }
+            }
+        },
+        {
+            "image_name": "darkfield1_20260219_153944_003.CR2",
+            "image_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26\\darkfield1_20260219_153944_003.CR2",
+            "experiment_folder": "Single_Slit_Multi_Distance_serious_19_02_26",
+            "vm_save_path": "/media/sf_Canon_Share/Experiment Photo/Single_Slit_Multi_Distance_serious_19_02_26",
+            "host_save_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26",
+            "date": "2026-02-19",
+            "time": "15:40:06",
+            "capture_time": "2026-02-19 15:40:06",
+            "timestamp": 1771476006.9862504,
+            "camera_settings": {
+                "shutter_speed": "1/15",
+                "iso": "100"
+            },
+            "motor_groups": {
+                "Group3": {
+                    "position": "304.6700",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group4": {
+                    "position": "61.3000",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group5": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group6": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group7": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                }
+            }
+        },
+        {
+            "image_name": "darkfield1_20260219_153944_004.CR2",
+            "image_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26\\darkfield1_20260219_153944_004.CR2",
+            "experiment_folder": "Single_Slit_Multi_Distance_serious_19_02_26",
+            "vm_save_path": "/media/sf_Canon_Share/Experiment Photo/Single_Slit_Multi_Distance_serious_19_02_26",
+            "host_save_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26",
+            "date": "2026-02-19",
+            "time": "15:40:15",
+            "capture_time": "2026-02-19 15:40:15",
+            "timestamp": 1771476015.2871647,
+            "camera_settings": {
+                "shutter_speed": "1/15",
+                "iso": "100"
+            },
+            "motor_groups": {
+                "Group3": {
+                    "position": "304.6700",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group4": {
+                    "position": "61.3000",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group5": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group6": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group7": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                }
+            }
+        },
+        {
+            "image_name": "darkfield1_20260219_153944_005.CR2",
+            "image_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26\\darkfield1_20260219_153944_005.CR2",
+            "experiment_folder": "Single_Slit_Multi_Distance_serious_19_02_26",
+            "vm_save_path": "/media/sf_Canon_Share/Experiment Photo/Single_Slit_Multi_Distance_serious_19_02_26",
+            "host_save_path": "C:\\Users\\minh\\Pictures\\Canon Share\\Experiment Photo\\Single_Slit_Multi_Distance_serious_19_02_26",
+            "date": "2026-02-19",
+            "time": "15:40:22",
+            "capture_time": "2026-02-19 15:40:22",
+            "timestamp": 1771476022.9619348,
+            "camera_settings": {
+                "shutter_speed": "1/15",
+                "iso": "100"
+            },
+            "motor_groups": {
+                "Group3": {
+                    "position": "304.6700",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group4": {
+                    "position": "61.3000",
+                    "status": "Ready state from motion",
+                    "status_code": "12"
+                },
+                "Group5": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group6": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                },
+                "Group7": {
+                    "position": "0.0000",
+                    "status": "OTINIT state",
+                    "status_code": "0"
+                }
+            }
+        }
+    ]
+}
