@@ -1,3 +1,4 @@
+# this step analyse the darkfield to make the decision on which darkfield to use for correction
 # There are 2 types of darkfield being recorded in the data:
 # 1. Darkfield when the laser source is off but the sensor is still open to environment of the recording of the diffraction.
 # 2. Darkfield recorded when the a cap is placed on the sensor, so it only records the dark current of the sensor itself, this name file is darkfield_cap.
@@ -13,9 +14,9 @@ import matplotlib.pyplot as plt
 #################### input json file location ####################
 # json file contains the information on the the locations and parameter of the raw data, containing in the same folder
 # uni pc
-# json_folder_location = r"C:\Users\HDao\Dropbox\2026\Single Slit Diffraction\Single_Slit_Multi_Distance_serious_19_02_26"
+json_folder_location = r"C:\Users\HDao\Dropbox\2026\Single Slit Diffraction\Single_Slit_Multi_Distance_serious_19_02_26"
 # home pc
-json_folder_location = r"C:\Users\mnhda\Dropbox\2026\Single Slit Diffraction\Single_Slit_Multi_Distance_serious_19_02_26"
+# json_folder_location = r"C:\Users\mnhda\Dropbox\2026\Single Slit Diffraction\Single_Slit_Multi_Distance_serious_19_02_26"
 
 
 #darkfield image from batch 1

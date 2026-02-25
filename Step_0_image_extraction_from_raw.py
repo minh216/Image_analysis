@@ -1,4 +1,4 @@
-# this function extract the iamge from CR2 raw to an array of pixel values, and save it as a .tif file for further result analysis in the next steps
+# this Step define a function to extract the image from CR2 raw to an array of pixel values, and save it as a .tif file for further result analysis in the next steps
 
 import json
 import rawpy
