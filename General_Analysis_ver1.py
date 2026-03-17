@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 json_folder_location = r"C:\Users\HDao\Dropbox\2026\Single Slit Diffraction\Single_Slit_Multi_Distance_serious_19_02_26"
 
 # raw images json file name
-json_file_name = "single_slit_multi_distance_serious_19_02_26.json"
+json_file_name = "center1_20260219_153041_metadata.json"
 
 # raw dark fields json file name
-json_dark_file_name = "center1_20260219_153041_metadata.json"
+json_dark_file_name = "darkfield1_20260219_153944_metadata.json"
 
 ################### input the analysis folder location and folder name for saving the converted images and the analysis results ####################
 # folder location for saving the converted images and the analysis results
@@ -184,4 +184,20 @@ corrected_image_folder.mkdir(parents=True, exist_ok=True)
 #%%
 #### Step 2: extract the average darkfield image, and the average time normalized darkfield corrected image, and save them as tif files in the corresponding folders
 # extract the average darkfield image, and the average time normalized darkfield corrected image
+average_time_normalized_DFcorrected_image = extract_DFcorrect_average_timenormalized_image(json_file_name, json_dark_file_name, json_folder_location, analysis_folder, dark_field_folder, corrected_image_folder)
 
+#%%
+# find the brightest point of the extracted image and show the image with a yellow marker at the brightest point
+brightest_point = np.unravel_index(np.argmax(average_time_normalized_DFcorrected_image), average_time_normalized_DFcorrected_image.shape)
+plt.imshow(average_time_normalized_DFcorrected_image, cmap='gray')  
+plt.plot(brightest_point[1], brightest_point[0], '+', color='red')  # plot a yellow marker at the brightest point
+plt.title('Average Time Normalized Darkfield Corrected Image with Brightest Point Marked')      
+plt.axis('off')
+plt.show()  
+# plot the vertical and horizontal profiles at the brightest point of the extracted image
+plot_V_H_profiles_at_brightest_point(average_time_normalized_DFcorrected_image) 
+
+
+
+
+# %%
