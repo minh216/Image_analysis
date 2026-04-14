@@ -43,7 +43,96 @@ from tkinter import filedialog
 
 window = tk.Tk()
 window.title("Input Parameters for Single Slit Diffraction Analysis")
-window.geometry("600x400")
+window.geometry("1000x400")
+
+# Define browser button for folder/file inputs
+def browse_folder():
+    folder_path = filedialog.askdirectory()
+    folder_entry.delete(0, tk.END)  # clear the entry box before inserting the new path
+    folder_entry.insert(0, folder_path)  # insert the selected folder path into the entry box
+
+# add button to browse for the folder location that contains the raw files and json files
+browse_button = tk.Button(window, text="Browse", command=browse_folder)
+browse_button.grid(row=0, column=2, padx=5, pady=5)
+
+# add button to browse for the raw json file name
+def browse_raw_json():
+    file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
+    raw_json_entry.delete(0, tk.END)  # clear the entry box before inserting the new path
+    raw_json_entry.insert(0, file_path)  # insert the selected file path into the entry box 
+
+browse_raw_json_button = tk.Button(window, text="Browse", command=browse_raw_json)
+browse_raw_json_button.grid(row=1, column=2, padx=5, pady=5)
+
+# add button to browse for the dark json file name
+def browse_dark_json():
+    file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
+    dark_json_entry.delete(0, tk.END)  # clear the entry box before inserting the new path
+    dark_json_entry.insert(0, file_path)  # insert the selected file path into the entry box 
+
+browse_dark_json_button = tk.Button(window, text="Browse", command=browse_dark_json)
+browse_dark_json_button.grid(row=2, column=2, padx=5, pady=5)
+
+# add button to browse for the analysis folder location
+def browse_analysis_folder():
+    folder_path = filedialog.askdirectory()
+    analysis_folder_entry.delete(0, tk.END)  # clear the entry box before inserting the new path
+    analysis_folder_entry.insert(0, folder_path)  # insert the selected folder path into the entry box
+
+browse_analysis_folder_button = tk.Button(window, text="Browse", command=browse_analysis_folder)
+browse_analysis_folder_button.grid(row=3, column=2, padx=5, pady=5)
+
+# add button to create the subfolder for the experiment in the analysis folder location using the experiment name input by the user
+def create_experiment_subfolder():
+    analysis_folder_location = analysis_folder_entry.get()
+    experiment_name = experiment_name_entry.get()
+    experiment_subfolder_path = Path(analysis_folder_location) / experiment_name
+    experiment_subfolder_path.mkdir(parents=True, exist_ok=True)  # create the subfolder for the experiment in the analysis folder location
+    tk.messagebox.showinfo("Subfolder Created", f"Subfolder for the experiment '{experiment_name}' has been created in the analysis folder location.")
+
+create_experiment_subfolder_button = tk.Button(window, text="Create Experiment Subfolder", command=create_experiment_subfolder)
+create_experiment_subfolder_button.grid(row=4, column=2, padx=5, pady=5)
+
+# Define a run button that reads all the entris and assigns them to variables:
+def run_analysis():
+    folder_location = folder_entry.get()
+    raw_json_file_name = raw_json_entry.get()
+    dark_json_file_name = dark_json_entry.get()
+    analysis_folder_location = analysis_folder_entry.get()
+    experiment_name = experiment_name_entry.get()
+    
+# add run button to run the analysis after inputting the parameters
+run_button = tk.Button(window, text="Run Analysis", command=run_analysis)
+run_button.grid(row=5, column=1, padx=5, pady=5)
+
+# add labes and entry boxes for each of the input parameters
+# A) file and folder input parameters:
+
+# 1. Folder_location: the folder location that contain the raw file (images and dark fields) and the metadata json file
+tk.Label(window, text="Folder Location that contains raw files and json files:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+folder_entry = tk.Entry(window, width=50)
+folder_entry.grid(row=0, column=1, padx=5, pady=5)
+
+# 2. Raw_json_file_name: the json file name for the raw images, which contains the information on the the locations and parameter of the raw data, containing in the same folder
+tk.Label(window, text="Raw Images JSON File Name:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+raw_json_entry = tk.Entry(window, width=50)
+raw_json_entry.grid(row=1, column=1, padx=5, pady=5)
+
+# 3. json_dark_file_name: the json file name for the raw dark fields. the Dark fields was tested and determined to be dominated by read out noise that is not affected by the exposure time so it is not time corrected before removed from the raw images. the dark field is average to remove random noise and then subtracted from the raw images without time normalization.
+tk.Label(window, text="Dark Fields JSON File Name:").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+dark_json_entry = tk.Entry(window, width=50)
+dark_json_entry.grid(row=2, column=1, padx=5, pady=5)
+
+# 4. analysis_folder_location: the folder location for saving the converted images and the analysis results.
+tk.Label(window, text="Analysis Folder Location:").grid(row=3, column=0, sticky="w", padx=5, pady=5)
+analysis_folder_entry = tk.Entry(window, width=50)
+analysis_folder_entry.grid(row=3, column=1, padx=5, pady=5)
+
+# 5. experiement_name: the experiment name for the current analysis, which will be used to create a subfolder in the analysis folder (4) for saving the converted images and the analysis results for this experiment.  
+tk.Label(window, text="Experiment Name:").grid(row=4, column=0, sticky="w", padx=5, pady=5)
+experiment_name_entry = tk.Entry(window, width=50)
+experiment_name_entry.grid(row=4, column=1, padx=5, pady=5)
+
 
 window.mainloop()  # start the GUI loop to display the window and wait for user input
 
