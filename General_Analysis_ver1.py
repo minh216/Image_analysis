@@ -245,7 +245,7 @@ def find_trough_distances_and_orders(horizontal_profile_combined, pixel_size, wa
     print(f"Estimated slit width from the first order trough on the right: {trough_distances_orders_right[0][3]:.6e} meters, or {trough_distances_orders_right[0][3]*1e6:.2f} micrometers")
     print(f"Average estimated slit width from the first order troughs: {average_estimated_slit_width_from_first_order:.6e} meters, or {average_estimated_slit_width_from_first_order*1e6:.2f} micrometers")
     print(f"Uncertainty in estimated slit width from the first order troughs: {uncertainty_estimated_slit_width_from_first_order:.6e} meters, or {uncertainty_estimated_slit_width_from_first_order*1e6:.2f} micrometers")      
-    return trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order    
+    return central_peak_index,trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order    
 
 # define a function that take in the combined image, the vertical range of interest, use the find_trough_distances_and_orders function to find all the slit estimate and uncertainty for all horizontal in the area of interest and output the average slit width estimate and uncertainty across all the horizontal profiles in the area of interest
 # the function will also output the slit width estimates and uncertainties for each horizontal profile in the area of interest in a list of tuples together with the vertical position of the horizontal profile in the combined image
@@ -253,13 +253,17 @@ def analyze_horizontal_profiles_in_area_of_interest(combined_image, vertical_ran
     slit_width_estimates_uncertainties = []  # list to store slit width estimates and uncertainties for each horizontal profile
     trough_distances_left_list = [] # list to store trough distances and vertical index for left troughs for each horizontal profile
     trough_distances_right_list = [] # list to store trough distances and vertical index for right troughs for each horizontal profile
+    central_peak_indices = [] # list to store central peak indices for each horizontal profile
+    horizontal_profile_list = [] # list to store horizontal profiles for each vertical index in the area of interest
     for y in range(vertical_range[0], vertical_range[1]):
        
        horizontal_profile = combined_image[y, :]
-       trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(horizontal_profile, pixel_size, wavelength, distance_slit_to_screen, kernel_size, sigma)
+       central_peak_index, trough_distances_orders_left, trough_distances_orders_right, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order = find_trough_distances_and_orders(horizontal_profile, pixel_size, wavelength, distance_slit_to_screen, kernel_size, sigma)
        slit_width_estimates_uncertainties.append((y, average_estimated_slit_width_from_first_order, uncertainty_estimated_slit_width_from_first_order))
        trough_distances_left_list.append((y, trough_distances_orders_left))
-       trough_distances_right_list.append((y, trough_distances_orders_right))    
+       trough_distances_right_list.append((y, trough_distances_orders_right))
+       central_peak_indices.append((y, central_peak_index))
+       horizontal_profile_list.append((y, horizontal_profile))
        print(f"Vertical incdex of the horizontal profile: {y})")
        print() # just a line bread for better readability in the output
 
@@ -280,7 +284,7 @@ def analyze_horizontal_profiles_in_area_of_interest(combined_image, vertical_ran
     print(f"Standard deviation of slit width estimates across all horizontal profiles in the area of interest: {std_slit_width_estimates_across_profiles:.6e} meters, or {std_slit_width_estimates_across_profiles*1e6:.2f} micrometers")
     print(f"Standard error of slit width estimates across all horizontal profiles in the area of interest: {standard_error_slit_width_estimates_across_profiles:.6e} meters, or {standard_error_slit_width_estimates_across_profiles*1e6:.2f} micrometers") 
     
-    return slit_width_estimates_uncertainties, average_slit_width_estimate_across_profiles, average_uncertainty_across_profiles, trough_distances_left_list, trough_distances_right_list  
+    return horizontal_profile_list, central_peak_indices, slit_width_estimates_uncertainties, average_slit_width_estimate_across_profiles, average_uncertainty_across_profiles, trough_distances_left_list, trough_distances_right_list  
 
 
 ############# Main code ##############
@@ -325,7 +329,7 @@ print()
 
 
 # analyze the horizontal profiles in the area of interest to find the slit width estimates and uncertainties for each profile, and the average slit width estimate and uncertainty across all profiles in the area of interest
-slit_width_estimates_uncertainties, average_slit_width_estimate_across_profiles, average_uncertainty_across_profiles, trough_distances_left_list, trough_distances_right_list = analyze_horizontal_profiles_in_area_of_interest(average_time_normalized_DFcorrected_image, vertical_range_of_interest, pixel_size, wavelength, distance_slit_to_screen, kernel_size=500, sigma=25)  
+horizontal_profile_list, central_peak_indices, slit_width_estimates_uncertainties, average_slit_width_estimate_across_profiles, average_uncertainty_across_profiles, trough_distances_left_list, trough_distances_right_list = analyze_horizontal_profiles_in_area_of_interest(average_time_normalized_DFcorrected_image, vertical_range_of_interest, pixel_size, wavelength, distance_slit_to_screen, kernel_size=500, sigma=25)  
 
 #%%
 # ploting the results
@@ -369,5 +373,25 @@ ax1.grid(which='both', linestyle='--', linewidth=0.5)
 plt.title('Distance from Central Peak to First Order Troughs and Slit Width Estimates vs Vertical Position')
 plt.tight_layout()  # otherwise the right y-label is slightly clipped   
 plt.show()
+#%%
+# plot the distance horizonal profile and the mark the location of the central peak and the first order troughs on the left and right
+left_trough_index = trough_distances_left_list[0][1][0][0]  # extract the index of the first order trough on the left from trough_distances_left_list
+right_trough_index = trough_distances_right_list[0][1][0][0]  # extract the index of the first order trough on the right from trough_distances_right_list
+central_peak_index = central_peak_indices[0][1]  # extract the index of the central peak from central_peak_indices
+horizontal_profile =horizontal_profile_list[0][1]  # extract the horizontal profile from horizontal_profile_list
+plt.figure(figsize=(12, 6))
+plt.plot(horizontal_profile, label='Horizontal Profile at Brightest Point')
+plt.plot(central_peak_index, horizontal_profile[central_peak_index], 'rx', label='Central Peak')  # mark the central peak with a red x
+plt.plot(left_trough_index, horizontal_profile[left_trough_index], 'go', label='First Order Trough (Left)')  # mark the first order trough on the left with a green circle
+plt.plot(right_trough_index, horizontal_profile[right_trough_index], 'mo', label='First Order Trough (Right)')  # mark the first order trough on the right with a magenta circle
+plt.title('Horizontal Profile at Brightest Point with Central Peak and First Order Troughs Marked')
+plt.xlabel('Pixel Position (x)')    
+plt.ylabel('Intensity (a.u.)')
+plt.legend()
+plt.grid(True)
+plt.show()
 
-# %%
+
+
+
+

@@ -15,40 +15,41 @@ import tkinter as tk
 from tkinter import filedialog
 
 #################### gui code for input parameters ####################
-# create a tkinter gui to input the parameters for the analysis
+# Listing all the input parameters needed for the analysis in the gui:
+
+# A) file and folder input parameters:
+# 1. Folder_location: the folder location that contain the raw file (images and dark fields) and the metadata json file
+# 2. Raw_json_file_name: the json file name for the raw images, which contains the information on the the locations and parameter of the raw data, containing in the same folder
+# 3. json_dark_file_name: the json file name for the raw dark fields. the Dark fields was tested and determined to be dominated by read out noise that is not affected by the exposure time so it is not time corrected before removed from the raw images. the dark field is average to remove random noise and then subtracted from the raw images without time normalization.
+# 4. analysis_folder_location: the folder location for saving the converted images and the analysis results.
+# 5. experiement_name: the experiment name for the current analysis, which will be used to create a subfolder in the analysis folder (4) for saving the converted images and the analysis results for this experiment.
+
+# B) parameters for the single slit analysis:
+# 1. pixel_size: the pixel size of the camera in meters, which is needed to convert the distance from the central peak to the troughs from pixels to meters for the slit width estimation using the single slit diffraction formula.
+# 2. wavelength: the wavelength of the laser used in the experiment in meters, which is needed for the slit width estimation using the single slit diffraction formula.
+# 3. distance_slit_to_screen: the distance from the slit to the screen in meters, which is needed for the slit width estimation using the single slit diffraction formula.
+
+# C) parameters for the trough finding using correlation with a Gaussian kernel:
+# 1. kernel_size: the size of the Gaussian kernel used for correlation to find the troughs in the horizontal profile. A larger kernel size can help to find troughs that are further apart, but it can also increase the risk of finding troughs in noise. A smaller kernel size can help to find troughs that are closer together, but it can also increase the risk of missing troughs that are further apart. The kernel size should be chosen based on the expected distance between the troughs in the horizontal profile and the level of noise in the data.
+# 2. sigma: the standard deviation of the Gaussian kernel used for correlation to find the troughs in the horizontal profile. A larger sigma can help to smooth the data more and reduce the risk of finding troughs in noise, but it can also decrease the accuracy of finding the troughs. A smaller sigma can help to find the troughs more accurately, but it can also increase the risk of finding troughs in noise. The sigma should be chosen based on the expected width of the troughs in the horizontal profile and the level of noise in the data.
+# 3. X_coordinate: x coordinate of the point that will pick to analyse the horizontal profile of the image.
+# 4. Y_coordinate: y coordinate of the point that will pick to analyse the horizontal profile of the image. This should be an option outside of just using the brightest point in the image.
+# 5. Upper_vertical_limit: the upper vertical limit of the area of interest for the single slit analysis, which will be used to analyze the horizontal profiles in this area to find the slit width estimates and uncertainties for each profile, and the average slit width estimate and uncertainty across all profiles in the area of interest.
+# 6. Lower_vertical_limit: the lower vertical limit of the area of interest for the single slit analysis, which will be used to analyze the horizontal profiles in this area to find the slit width estimates and uncertainties for each profile, and the average slit width estimate and uncertainty across all profiles in the area of interest.  
+
+# the gui code will use tkinter to create a simple interface for the user to input these parameters, and then the main analysis code will use these parameters for the analysis. The user can also choose to use the default values for these parameters if they are not sure about the values to input. The default values will be based on the typical values used in the experiment and the analysis. The user can also choose to save the input parameters for future reference and reproducibility of the analysis.
+
+# gui code for input parameters using tkinter
+
 window = tk.Tk()
 window.title("Input Parameters for Single Slit Diffraction Analysis")
-window.geometry("600x400")   
+window.geometry("600x400")
 
-# define the browse folder function for the json folder location
-def browse_json_folder():
-    folder_selected = filedialog.askdirectory()
-    json_folder_entry.delete(0, tk.END)
-    json_folder_entry.insert(0, folder_selected)    
-
-# row 0: input for json folder location
-json_folder_label = tk.Label(window, text="Json Folder Location:")  
-json_folder_label.grid(row=0, column=0, padx=10, pady=10)
-json_folder_entry = tk.Entry(window, width=50)
-json_folder_entry.grid(row=0, column=1, padx=10, pady=10)
-json_folder_button = tk.Button(window, text="Browse", command=browse_json_folder)
-json_folder_button.grid(row=0, column=2, padx=10, pady=10)
-# row 1: inpurt for image metadata json file name
-json_file_label = tk.Label(window, text="Image Metadata Json File Name:")
-json_file_label.grid(row=1, column=0, padx=10, pady=10)
-json_file_entry = tk.Entry(window, width=50)
-json_file_entry.grid(row=1, column=1, padx=10, pady=10)
-# row 2: input for darkfield metadata json file name
-json_dark_file_label = tk.Label(window, text="Darkfield Metadata Json File Name:")  
-json_dark_file_label.grid(row=2, column=0, padx=10, pady=10)
-json_dark_file_entry = tk.Entry(window, width=50)
-json_dark_file_entry.grid(row=2, column=1, padx=10, pady=10)
+window.mainloop()  # start the GUI loop to display the window and wait for user input
 
 
 
-
-window.mainloop()
-
+#%%
 
 #################### input json file location ####################
 # # json file contains the information on the the locations and parameter of the raw data, containing in the same folder
